@@ -77,6 +77,47 @@ def cnpj_valido(texto: str) -> bool:
     return True
 
 
+def luhn_valido(texto: str) -> bool:
+    """
+    Confere um número de cartão pelo algoritmo de Luhn.
+
+    Três filtros em sequência, do mais barato ao mais caro:
+
+    1. Comprimento entre 13 e 19 dígitos. Abaixo disso não é cartão;
+       acima, também não. Isso já descarta CPF, que tem 11.
+    2. Primeiro dígito entre 3 e 6. As bandeiras reais ocupam essa
+       faixa: 3 (Amex, Diners), 4 (Visa), 5 (Mastercard), 6 (Elo,
+       Discover, Hipercard). Qualquer outra coisa é número solto.
+    3. O próprio Luhn: dobra cada segundo dígito a partir da direita,
+       subtrai 9 do resultado quando passa de 9, e o total tem que
+       ser múltiplo de 10.
+
+    Um CNPJ válido é recusado de propósito. Ele tem 14 dígitos, cabe
+    na faixa, e um em cada dez passa no Luhn por acaso. Como o
+    projeto já tem uma regra própria para CNPJ, acusar o mesmo número
+    duas vezes só gera ruído.
+    """
+    numero = _digitos(texto)
+    if not 13 <= len(numero) <= 19:
+        return False
+    if numero[0] not in "3456":
+        return False
+    if numero == numero[0] * len(numero):
+        return False
+    if len(numero) == 14 and cnpj_valido(numero):
+        return False
+
+    total = 0
+    for posicao, caractere in enumerate(reversed(numero)):
+        digito = int(caractere)
+        if posicao % 2 == 1:
+            digito *= 2
+            if digito > 9:
+                digito -= 9
+        total += digito
+    return total % 10 == 0
+
+
 def _nao_e_exemplo(texto: str) -> bool:
     """Ignora endereços obviamente fictícios usados em documentação."""
     descartaveis = (
@@ -220,6 +261,20 @@ REGRAS = [
         ),
         artigo=lgpd.ART_46,
         severidade="baixo",
+    ),
+    Regra(
+        codigo="LGPD009",
+        nome="Número de cartão no código-fonte",
+        descricao=(
+            "Número de cartão de pagamento válido escrito no código. Além "
+            "da LGPD, isso viola o PCI DSS, norma contratual que todo "
+            "estabelecimento aceitante assina com a adquirente. A sanção "
+            "contratual costuma chegar antes da administrativa."
+        ),
+        padrao=re.compile(r"(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)"),
+        artigo=lgpd.ART_46,
+        severidade="critico",
+        confirma=luhn_valido,
     ),
 ]
 

@@ -13,7 +13,7 @@ Essa tradução — do achado técnico para o dispositivo legal — é o que est
 Requer Python 3.9 ou superior. Sem dependências externas.
 
 ```bash
-git clone https://github.com/SEU-USUARIO/lgpd-scan.git
+git clone https://github.com/Marcelo-Lucas-Silva/lgpd-scan.git
 cd lgpd-scan
 ```
 
@@ -68,6 +68,7 @@ Um exemplo completo de relatório em Markdown está em [`exemplos/relatorio-exem
 | LGPD006 | Credencial no código-fonte | Crítico | Art. 46 |
 | LGPD007 | Dado pessoal em URL | Alto | Art. 46 |
 | LGPD008 | Telefone no código-fonte | Baixo | Art. 46 |
+| LGPD009 | Número de cartão no código-fonte | Crítico | Art. 46 |
 
 Para silenciar uma linha específica, escreva nela o comentário `lgpd-scan: ignorar`.
 
@@ -76,7 +77,7 @@ Para silenciar uma linha específica, escreva nela o comentário `lgpd-scan: ign
 ## Três decisões de projeto
 
 **Os documentos são validados, não só reconhecidos.**
-Qualquer sequência de onze dígitos parece um CPF — um timestamp em milissegundos, um número de protocolo, um código de barras truncado. O scanner confere os dois dígitos verificadores pelo módulo 11 antes de reportar. A diferença entre uma ferramenta que as pessoas usam e uma que desinstalam no primeiro dia é a taxa de falso positivo, e ela vive nessa função.
+Qualquer sequência de onze dígitos parece um CPF — um timestamp em milissegundos, um número de protocolo, um código de barras truncado. O scanner confere os dois dígitos verificadores pelo módulo 11 antes de reportar; cartões passam pelo Luhn e ainda pela faixa de bandeira. A diferença entre uma ferramenta que as pessoas usam e uma que desinstalam no primeiro dia é a taxa de falso positivo, e ela vive nessas funções.
 
 **O relatório mascara o que encontrou.**
 Um relatório de LGPD que imprime o CPF por inteiro acabou de criar uma segunda cópia do vazamento — agora num arquivo que circula por e-mail. A saída mostra `529.******25`: suficiente para localizar o dado no arquivo, insuficiente para identificar alguém.
@@ -124,15 +125,17 @@ Uma entrada nova em `REGRAS`, em `lgpdscan/rules.py`. Nada mais no projeto preci
 
 ```python
 Regra(
-    codigo="LGPD009",
-    nome="Número de cartão no código-fonte",
+    codigo="LGPD010",
+    nome="Chave PIX no código-fonte",
     descricao="...",
-    padrao=re.compile(r"\b(?:\d[ -]*?){13,16}\b"),
+    padrao=re.compile(r"\bpix[_-]?(?:key|chave)\s*[:=]\s*['\"][^'\"]+['\"]"),
     artigo=lgpd.ART_46,
-    severidade="critico",
-    confirma=luhn_valido,   # opcional, reduz falso positivo
+    severidade="alto",
+    confirma=None,   # opcional: função que reduz falso positivo
 )
 ```
+
+O campo `confirma` é o que separa uma regra usável de um gerador de ruído. Veja `cpf_valido` e `luhn_valido` em `rules.py` como referência.
 
 ---
 
