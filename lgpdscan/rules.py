@@ -118,20 +118,66 @@ def luhn_valido(texto: str) -> bool:
     return total % 10 == 0
 
 
+#: Nomes de caixa que não pertencem a uma pessoa: contas de serviço,
+#: espaços reservados de documentação e nomes genéricos de fixture.
+#: Comparados por prefixo, para pegar test1, test_2, johndoe2 etc.
+_CAIXAS_IMPESSOAIS = (
+    # contas de serviço e automação
+    "git", "noreply", "no-reply", "no_reply", "donotreply",
+    "postmaster", "webmaster", "mailer-daemon", "abuse", "admin",
+    "root", "suporte", "support", "contato", "contact", "info",
+    # espaços reservados de documentação
+    "exemplo", "example", "nome", "name", "seu", "sua", "your",
+    "eu", "me", "fulano", "ciclano", "beltrano",
+    # nomes de fixture
+    "test", "teste", "user", "usuario", "foo", "bar", "baz",
+    "john", "jane", "doe", "fake", "dummy", "naoexiste",
+    "qwerty", "asdf",
+)
+
+#: Domínios que nunca hospedam caixa de pessoa real.
+_DOMINIOS_FICTICIOS = (
+    "example.com", "example.org", "example.net",
+    "exemplo.com", "exemplo.com.br",
+    "test.com", "teste.com", "test.local",
+    "dominio.com", "domain.com",
+    "foo.com", "foo.org", "bar.com",
+    "naoexiste.com", "email.com",
+    "localhost", "invalid", "local",
+)
+
+
 def _nao_e_exemplo(texto: str) -> bool:
-    """Ignora endereços obviamente fictícios usados em documentação."""
-    descartaveis = (
-        "example.com",
-        "example.org",
-        "exemplo.com",
-        "test.com",
-        "localhost",
-        "@email.com",
-        "seu@email",
-        "user@domain",
-    )
-    minusculo = texto.lower()
-    return not any(d in minusculo for d in descartaveis)
+    """
+    Decide se um endereço de e-mail pertence mesmo a uma pessoa.
+
+    Um endereço com formato válido não é, por si só, dado pessoal. Três
+    categorias casam com o formato e não identificam ninguém:
+
+    1. Contas de serviço: ``git@github.com`` é URL de clone por SSH,
+       ``noreply@`` é caixa que não recebe resposta. Não há titular.
+    2. Espaços reservados de documentação: ``nome@dominio.com``,
+       ``seu@email.com``.
+    3. Fixtures de teste: ``test1@api.com``, ``johndoe@oi.com``.
+
+    O custo desta função é conhecido e aceito: um endereço real cujo
+    nome de caixa comece por algo desta lista — ``testani@``,
+    ``usuario.silva@`` — passa despercebido. É um falso negativo em
+    troca de uma queda grande no ruído. Varredura com ruído alto
+    simplesmente deixa de ser lida, e aí a taxa de detecção real cai
+    a zero.
+    """
+    endereco = texto.strip().lower()
+    if "@" not in endereco:
+        return True
+
+    caixa, _, dominio = endereco.rpartition("@")
+
+    if any(dominio == d or dominio.endswith("." + d) for d in _DOMINIOS_FICTICIOS):
+        return False
+    if any(caixa.startswith(c) for c in _CAIXAS_IMPESSOAIS):
+        return False
+    return True
 
 
 # --------------------------------------------------------------------------
