@@ -1,0 +1,26 @@
+[project]
+name = "lgpd-scan"
+version = "0.1.0"
+description = "Análise estática de exposição de dados pessoais, com mapeamento aos artigos da LGPD."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+keywords = ["lgpd", "privacidade", "seguranca", "sast", "compliance"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+    "Natural Language :: Portuguese (Brazilian)",
+]
+
+[project.scripts]
+lgpd-scan = "lgpdscan.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["lgpdscan"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

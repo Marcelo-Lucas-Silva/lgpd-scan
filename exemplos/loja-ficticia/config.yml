@@ -1,0 +1,15 @@
+# Arquivo de demonstração — configuração propositalmente insegura.
+
+empresa:
+  razao_social: Comercio Exemplo Ltda
+  cnpj: "11.222.333/0001-81"
+  responsavel_email: "diretoria@comercioexemplo.com.br"
+
+banco:
+  host: db.interno.local
+  usuario: app_loja
+  password: "trocar-depois-123456"
+
+integracao:
+  # Inventada, sem imitar o formato de provedor real — ver cadastro.py
+  api_key: "integracao-ficticia-0000000000000000"
