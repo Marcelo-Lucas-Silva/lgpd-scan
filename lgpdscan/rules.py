@@ -118,6 +118,61 @@ def luhn_valido(texto: str) -> bool:
     return total % 10 == 0
 
 
+#: Códigos de área em uso no Brasil, conforme o Plano Geral de Códigos
+#: Nacionais da Anatel. A lista tem buracos de propósito: 20, 23, 26,
+#: 30, 36, 39, 40, 50, 52, 56 a 60, 70, 72, 76, 78, 80 e 90 não existem.
+#: São justamente esses buracos que descartam sequência aleatória.
+_DDDS = frozenset(
+    "11 12 13 14 15 16 17 18 19 "          # São Paulo
+    "21 22 24 "                            # Rio de Janeiro
+    "27 28 "                               # Espírito Santo
+    "31 32 33 34 35 37 38 "                # Minas Gerais
+    "41 42 43 44 45 46 "                   # Paraná
+    "47 48 49 "                            # Santa Catarina
+    "51 53 54 55 "                         # Rio Grande do Sul
+    "61 62 63 64 65 66 67 68 69 "          # Centro-Oeste e Norte
+    "71 73 74 75 77 79 "                   # Bahia e Sergipe
+    "81 82 83 84 85 86 87 88 89 "          # Nordeste
+    "91 92 93 94 95 96 97 98 99".split()   # Norte
+)
+
+
+def telefone_valido(texto: str) -> bool:
+    """
+    Confere se a sequência é mesmo um telefone brasileiro.
+
+    Três exigências, todas do plano de numeração da Anatel:
+
+    1. Dez ou onze dígitos, fora o código do país.
+    2. Código de área que exista. Dos 90 pares possíveis entre 10 e 99,
+       só 67 estão em uso — o que descarta cerca de um quarto das
+       sequências aleatórias logo de saída.
+    3. Primeiro dígito do assinante coerente: celular tem nove dígitos
+       e começa com 9; fixo tem oito e começa com 2, 3, 4 ou 5.
+
+    Foi escrita depois de uma varredura real acusar "telefone" dentro
+    de uma lista de CPFs de teste. Um CPF truncado tem onze dígitos e
+    casa com qualquer padrão de telefone construído só por formato.
+    """
+    numero = _digitos(texto)
+
+    if numero.startswith("55") and len(numero) in (12, 13):
+        numero = numero[2:]
+
+    if len(numero) not in (10, 11):
+        return False
+    if numero == numero[0] * len(numero):
+        return False
+
+    ddd, assinante = numero[:2], numero[2:]
+    if ddd not in _DDDS:
+        return False
+
+    if len(assinante) == 9:
+        return assinante[0] == "9"
+    return assinante[0] in "2345"
+
+
 #: Nomes de caixa que não pertencem a uma pessoa: contas de serviço,
 #: espaços reservados de documentação e nomes genéricos de fixture.
 #: Comparados por prefixo, para pegar test1, test_2, johndoe2 etc.
@@ -307,6 +362,7 @@ REGRAS = [
         ),
         artigo=lgpd.ART_46,
         severidade="baixo",
+        confirma=telefone_valido,
     ),
     Regra(
         codigo="LGPD009",
