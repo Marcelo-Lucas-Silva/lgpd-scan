@@ -242,11 +242,11 @@ def _nao_e_exemplo(texto: str) -> bool:
 REGRAS = [
     Regra(
         codigo="LGPD001",
-        nome="CPF no código-fonte",
+        nome="CPF exposto",
         descricao=(
-            "Um CPF válido aparece escrito diretamente no código. Código vai "
-            "para repositório, backup e máquina de quem entra na equipe; o "
-            "dado viaja junto e ninguém registra esse acesso."
+            "Um CPF válido aparece escrito em código, planilha ou documento. "
+            "O arquivo viaja em backup, e-mail e máquina de quem entra na "
+            "equipe; o dado viaja junto e ninguém registra esse acesso."
         ),
         padrao=re.compile(r"\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b"),
         artigo=lgpd.ART_46,
@@ -255,7 +255,7 @@ REGRAS = [
     ),
     Regra(
         codigo="LGPD002",
-        nome="CNPJ no código-fonte",
+        nome="CNPJ exposto",
         descricao=(
             "CNPJ não é dado pessoal de pessoa jurídica, mas o de MEI e "
             "empresário individual identifica pessoa natural. Trate como "
@@ -268,7 +268,7 @@ REGRAS = [
     ),
     Regra(
         codigo="LGPD003",
-        nome="E-mail pessoal no código-fonte",
+        nome="E-mail pessoal exposto",
         descricao=(
             "Endereço de e-mail real escrito no código. É dado pessoal pelo "
             "Art. 5º, I, porque identifica pessoa natural."
@@ -319,7 +319,7 @@ REGRAS = [
     ),
     Regra(
         codigo="LGPD006",
-        nome="Credencial no código-fonte",
+        nome="Credencial exposta",
         descricao=(
             "Chave de API, token ou senha escrita no código. Quem obtém a "
             "credencial obtém os dados que ela protege — a exposição não é "
@@ -351,7 +351,7 @@ REGRAS = [
     ),
     Regra(
         codigo="LGPD008",
-        nome="Telefone no código-fonte",
+        nome="Telefone exposto",
         descricao=(
             "Número de telefone brasileiro escrito no código. Dado pessoal "
             "quando vinculável a pessoa natural."
@@ -366,7 +366,7 @@ REGRAS = [
     ),
     Regra(
         codigo="LGPD009",
-        nome="Número de cartão no código-fonte",
+        nome="Número de cartão exposto",
         descricao=(
             "Número de cartão de pagamento válido escrito no código. Além "
             "da LGPD, isso viola o PCI DSS, norma contratual que todo "

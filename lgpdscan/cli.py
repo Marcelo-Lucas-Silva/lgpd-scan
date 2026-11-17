@@ -24,8 +24,9 @@ def construir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="lgpd-scan",
         description=(
-            "Varre um código-fonte em busca de dado pessoal exposto e "
-            "mapeia cada achado ao artigo da LGPD correspondente."
+            "Varre código-fonte, planilhas (.xlsx), documentos (.docx) e "
+            "PDFs em busca de dado pessoal exposto, e mapeia cada achado ao "
+            "artigo da LGPD correspondente."
         ),
     )
     parser.add_argument(

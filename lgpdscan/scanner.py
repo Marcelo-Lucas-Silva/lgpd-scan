@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator, Sequence
 
+from .extractors import BibliotecaFaltando, EXTENSOES_DOCUMENTO, biblioteca_de, extrair
 from .lgpd import SEVERIDADES
 from .rules import REGRAS, Regra
 
@@ -29,13 +30,14 @@ EXTENSOES = {
     ".sql", ".sh", ".bash", ".ps1", ".yml", ".yaml", ".json", ".toml",
     ".ini", ".cfg", ".conf", ".env", ".properties", ".xml", ".html",
     ".vue", ".svelte", ".md", ".txt", ".csv",
-}
+} | EXTENSOES_DOCUMENTO
 
 #: Linha mais longa que isso é quase sempre arquivo minificado ou dado
 #: embutido em base64. Varrer custa caro e o achado é inútil.
 LIMITE_LINHA = 2000
 
-MAX_BYTES = 5 * 1024 * 1024  # 5 MB
+MAX_BYTES = 5 * 1024 * 1024          # 5 MB, para texto e código
+MAX_BYTES_DOC = 50 * 1024 * 1024     # 50 MB, documentos são maiores
 
 
 @dataclass(frozen=True)
@@ -45,6 +47,10 @@ class Achado:
     coluna: int
     trecho: str
     regra: Regra
+    #: Para documento, onde o achado está em linguagem de pessoa:
+    #: "Planilha 'Clientes' linha 42", "página 3". Vazio para código,
+    #: onde o próprio número da linha já localiza.
+    local: str = ""
 
     @property
     def severidade(self) -> str:
@@ -73,8 +79,9 @@ def _deve_varrer(caminho: Path, extensoes: Iterable[str]) -> bool:
         # arquivos sem extensão com nome conhecido ainda interessam
         if caminho.name not in {".env", "Dockerfile", "Makefile"}:
             return False
+    limite = MAX_BYTES_DOC if caminho.suffix.lower() in EXTENSOES_DOCUMENTO else MAX_BYTES
     try:
-        if caminho.stat().st_size > MAX_BYTES:
+        if caminho.stat().st_size > limite:
             return False
     except OSError:
         return False
@@ -102,14 +109,44 @@ def listar_arquivos(
                 yield caminho
 
 
-def varrer_arquivo(caminho: Path, regras: Sequence[Regra] = REGRAS):
-    """Aplica cada regra a cada linha do arquivo."""
+#: Avisos acumulados durante a última varredura (documento que não pôde
+#: ser lido). Quem chama lê isto depois, para informar o usuário.
+avisos: list[str] = []
+
+
+def _linhas_do_arquivo(caminho: Path):
+    """
+    Devolve (numero, texto, local) para cada unidade analisável.
+
+    Para código e texto, uma linha é uma linha e `local` fica vazio.
+    Para documento, delega ao extrator, que já traz o localizador em
+    linguagem de pessoa (célula, parágrafo, página).
+    """
+    if caminho.suffix.lower() in EXTENSOES_DOCUMENTO:
+        try:
+            for trecho in extrair(caminho):
+                yield trecho.numero, trecho.texto, trecho.local
+        except BibliotecaFaltando as erro:
+            pacote = biblioteca_de(caminho.suffix) or str(erro)
+            avisos.append(
+                f"{caminho}: não lido — instale a biblioteca com "
+                f"'pip install {pacote}'"
+            )
+        except Exception as erro:  # arquivo corrompido, protegido por senha
+            avisos.append(f"{caminho}: não lido ({type(erro).__name__})")
+        return
+
     try:
         texto = caminho.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return
-
     for numero, linha in enumerate(texto.splitlines(), start=1):
+        yield numero, linha, ""
+
+
+def varrer_arquivo(caminho: Path, regras: Sequence[Regra] = REGRAS):
+    """Aplica cada regra a cada unidade de texto do arquivo."""
+    for numero, linha, local in _linhas_do_arquivo(caminho):
         if len(linha) > LIMITE_LINHA:
             continue
         if "lgpd-scan: ignorar" in linha:
@@ -122,6 +159,7 @@ def varrer_arquivo(caminho: Path, regras: Sequence[Regra] = REGRAS):
                     coluna=coluna + 1,
                     trecho=trecho,
                     regra=regra,
+                    local=local,
                 )
 
 
@@ -132,6 +170,7 @@ def varrer(
     ignorar: Iterable[str] = PASTAS_IGNORADAS,
 ) -> list[Achado]:
     """Varre uma pasta ou arquivo e devolve os achados ordenados."""
+    avisos.clear()
     achados: list[Achado] = []
     for caminho in listar_arquivos(raiz, extensoes, ignorar):
         achados.extend(varrer_arquivo(caminho, regras))

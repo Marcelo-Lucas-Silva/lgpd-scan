@@ -1,0 +1,8 @@
+# Leitura de documentos. Sem estas, o scanner ainda roda em código e
+# texto; pula planilha, documento e PDF com um aviso.
+openpyxl>=3.1      # .xlsx, .xlsm
+python-docx>=1.1   # .docx
+pdfplumber>=0.11   # .pdf
+
+# Testes
+pytest>=8.0

@@ -59,9 +59,10 @@ def terminal(achados: Sequence[Achado], raiz: Path, cor: bool = True) -> str:
         linhas.append(f"{NEGRITO if cor else ''}{titulo}{RESET if cor else ''}")
         for achado in sorted(por_arquivo[arquivo], key=lambda a: a.linha):
             etiqueta = ROTULO_SEVERIDADE[achado.severidade].ljust(7)
+            onde = achado.local if achado.local else f"linha {achado.linha}:{achado.coluna}"
             linhas.append(
                 f"  {pinta(etiqueta, achado.severidade)} "
-                f"linha {achado.linha}:{achado.coluna}  "
+                f"{onde}  "
                 f"{achado.regra.codigo}  {achado.regra.nome}  "
                 f"[{achado.mascarado()}]  →  {achado.regra.artigo.numero}"
             )
@@ -75,6 +76,14 @@ def terminal(achados: Sequence[Achado], raiz: Path, cor: bool = True) -> str:
     linhas.append("")
     linhas.append(f"{len(achados)} achado(s) em {len(por_arquivo)} arquivo(s)")
     linhas.append(resumo)
+
+    from .scanner import avisos
+    if avisos:
+        linhas.append("")
+        linhas.append(f"{len(avisos)} arquivo(s) não lido(s):")
+        for aviso in avisos:
+            linhas.append(f"  {aviso}")
+
     return "\n".join(linhas)
 
 
@@ -140,13 +149,14 @@ def markdown(achados: Sequence[Achado], raiz: Path) -> str:
             "",
             f"**Providência:** {regra.artigo.acao}",
             "",
-            "| Arquivo | Linha | Trecho (mascarado) |",
+            "| Arquivo | Localização | Trecho (mascarado) |",
             "| --- | --- | --- |",
         ]
         for achado in grupo[:50]:
             caminho = _relativo(achado.arquivo, raiz)
+            onde = achado.local if achado.local else f"linha {achado.linha}"
             partes.append(
-                f"| `{caminho}` | {achado.linha} | `{achado.mascarado()}` |"
+                f"| `{caminho}` | {onde} | `{achado.mascarado()}` |"
             )
         if len(grupo) > 50:
             partes.append(f"| … | | mais {len(grupo) - 50} ocorrência(s) |")

@@ -10,12 +10,17 @@ Essa tradução — do achado técnico para o dispositivo legal — é o que est
 
 ## Instalação
 
-Requer Python 3.9 ou superior. Sem dependências externas.
+Requer Python 3.9 ou superior.
 
 ```bash
 git clone https://github.com/Marcelo-Lucas-Silva/lgpd-scan.git
 cd lgpd-scan
+pip install -r requirements.txt
 ```
+
+As dependências servem para ler planilha, documento e PDF. Sem elas o
+scanner ainda funciona em código e texto, e pula os demais formatos
+com um aviso.
 
 ## Uso
 
@@ -60,17 +65,30 @@ Um exemplo completo de relatório em Markdown está em [`exemplos/relatorio-exem
 
 | Código | Achado | Severidade | Dispositivo |
 | --- | --- | --- | --- |
-| LGPD001 | CPF no código-fonte | Crítico | Art. 46 |
-| LGPD002 | CNPJ no código-fonte | Médio | Art. 46 |
-| LGPD003 | E-mail pessoal no código-fonte | Médio | Art. 46 |
+| LGPD001 | CPF exposto | Crítico | Art. 46 |
+| LGPD002 | CNPJ exposto | Médio | Art. 46 |
+| LGPD003 | E-mail pessoal exposto | Médio | Art. 46 |
 | LGPD004 | Dado pessoal gravado em log | Alto | Art. 6º, VIII |
 | LGPD005 | Dado pessoal sensível tratado | Alto | Art. 11 |
-| LGPD006 | Credencial no código-fonte | Crítico | Art. 46 |
+| LGPD006 | Credencial exposta | Crítico | Art. 46 |
 | LGPD007 | Dado pessoal em URL | Alto | Art. 46 |
-| LGPD008 | Telefone no código-fonte | Baixo | Art. 46 |
-| LGPD009 | Número de cartão no código-fonte | Crítico | Art. 46 |
+| LGPD008 | Telefone exposto | Baixo | Art. 46 |
+| LGPD009 | Número de cartão exposto | Crítico | Art. 46 |
 
 Para silenciar uma linha específica, escreva nela o comentário `lgpd-scan: ignorar`.
+
+## Formatos lidos
+
+Código e texto (`.py`, `.js`, `.sql`, `.json`, `.csv`, `.md`, …), e também
+**planilhas (`.xlsx`), documentos (`.docx`) e PDFs (`.pdf`)** — onde mora a
+maior parte do dado pessoal de uma empresa. No relatório, o achado em
+documento é localizado em linguagem de pessoa: `Planilha 'Clientes' linha 42`,
+`parágrafo 12`, `página 3`.
+
+> **Varra documento na máquina do cliente, não na sua.** Varrer código é ler
+> arquivo técnico; varrer a pasta de documentos é ler a base de clientes
+> inteira. Rode a ferramenta onde os arquivos já estão e não os copie para
+> fora — uma cópia no seu computador faz de você um segundo ponto de exposição.
 
 ---
 
