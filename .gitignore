@@ -12,3 +12,8 @@ relatorio.md
 .DS_Store
 .idea/
 .vscode/
+
+# Artefatos do PyInstaller
+build/
+dist/
+*.spec
