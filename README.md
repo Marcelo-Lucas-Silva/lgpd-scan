@@ -159,6 +159,11 @@ O campo `confirma` é o que separa uma regra usável de um gerador de ruído. Ve
 
 ## Licença
 
-MIT — veja [LICENSE](LICENSE).
+Licenciamento **duplo** — veja [LICENSING.md](LICENSING.md):
+
+- **AGPL-3.0** — uso livre e gratuito, desde que o código derivado também fique aberto sob AGPL, inclusive quando o programa é oferecido como serviço pela internet. Veja [LICENSE](LICENSE).
+- **Licença comercial** — para usar dentro de software de código fechado, ou como serviço sem abrir o código. Sob contrato. Contato pelo [LinkedIn](https://www.linkedin.com/in/marcelolucassilva/) ou abrindo uma *issue* no GitHub.
+
+Copyright © 2026 Marcelo Lucas Silva.
 
 Esta ferramenta não substitui parecer jurídico. Ela levanta indícios técnicos; a qualificação jurídica de cada achado depende do contexto do tratamento.

@@ -9,6 +9,7 @@ keywords = ["lgpd", "privacidade", "seguranca", "sast", "compliance"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Security",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Natural Language :: Portuguese (Brazilian)",
 ]
 
